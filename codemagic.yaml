@@ -8,19 +8,16 @@ workflows:
     cache:
       cache_paths:
         - $FLUTTER_ROOT/.pub-cache
-
     scripts:
       - name: Add provisioning profiles
         script: |
           set -e # exit on first failed command
-
           PROFILES_HOME="$HOME/Library/MobileDevice/Provisioning Profiles"
           mkdir -p "$PROFILES_HOME"
           echo ${PROVISIONING_PROFILE?} | base64 --decode > "$PROFILES_HOME/$(uuidgen).mobileprovision"
       - name: Add signing certificate
         script: |
           set -e # exit on first failed command
-
           echo ${CERTIFICATE?} | base64 --decode > /tmp/certificate.p12
           keychain initialize
           keychain add-certificates \
@@ -30,20 +27,17 @@ workflows:
         script: agvtool new-version -all $BUILD_NUMBER
       - name: Set up code signing settings on Xcode project
         script: xcode-project use-profiles
-        ... your dependencies installation
-        - name: Set up keychain to be used for code signing using Codemagic CLI 'keychain' command
-    script: keychain initialize
-  - name: Fetch signing files
-    script: |
-      # You can allow creating resources if existing are not found with `--create` flag
-      app-store-connect fetch-signing-files "io.codemagic.app" \
-        --type IOS_APP_DEVELOPMENT \
-        --create
-  - name: Set up signing certificate
-    script: keychain add-certificates
-  - name: Set up code signing settings on Xcode project
-    script: xcode-project use-profiles
-  ... your build commands
+      - name: Set up keychain to be used for code signing using Codemagic CLI 'keychain' command
+        script: keychain initialize
+      - name: Fetch signing files
+        script: |
+          app-store-connect fetch-signing-files "io.codemagic.app" \
+          --type IOS_APP_DEVELOPMENT \
+          --create
+      - name: Set up signing certificate
+        script: keychain add-certificates
+      - name: Set up code signing settings on Xcode project
+        script: xcode-project use-profiles
       - name: Build ipa for distribution
         script: xcode-project build-ipa \
                     --workspace "${XCODE_WORKSPACE?}" \
